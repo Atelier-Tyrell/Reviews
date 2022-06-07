@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="ratings-and-reviews" id="Project-119f" database="PostgreSQL" >
+	<schema name="ratings-and-reviews" >
+		<table name="review_characteristics" >
+			<column name="id" type="integer" jt="4" mandatory="y" />
+			<column name="review_id" type="integer" jt="4" mandatory="y" >
+				<comment><![CDATA[The id of the associated review.]]></comment>
+			</column>
+			<column name="product_id" type="integer" jt="4" >
+				<comment><![CDATA[The id of the associated product.]]></comment>
+			</column>
+			<column name="name" type="varchar" length="100" jt="12" >
+				<comment><![CDATA[The name of the characteristic.]]></comment>
+			</column>
+			<column name="rating" type="smallint" jt="5" mandatory="y" >
+				<comment><![CDATA[The rating of the characteristic.]]></comment>
+			</column>
+			<index name="pk_review_characteristics" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<fk name="fk_review_characteristics" to_schema="ratings-and-reviews" to_table="reviews" >
+				<fk_column name="review_id" pk="id" />
+			</fk>
+		</table>
+		<table name="review_photos" >
+			<comment><![CDATA[Photos added to reviews.]]></comment>
+			<column name="id" type="integer" jt="4" mandatory="y" />
+			<column name="review_id" type="integer" jt="4" mandatory="y" />
+			<column name="product_id" type="integer" jt="4" mandatory="y" />
+			<column name="url" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[The url of the photo.]]></comment>
+			</column>
+			<index name="pk_review_photos" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<fk name="fk_review_photos_reviews" to_schema="ratings-and-reviews" to_table="reviews" >
+				<fk_column name="review_id" pk="id" />
+			</fk>
+		</table>
+		<table name="reviews" >
+			<comment><![CDATA[Contains all product reviews.]]></comment>
+			<column name="id" type="integer" jt="4" mandatory="y" />
+			<column name="product_id" type="integer" jt="4" mandatory="y" />
+			<column name="date" type="date" jt="91" mandatory="y" >
+				<defo><![CDATA[CURRENT_DATE]]></defo>
+			</column>
+			<column name="rating" type="smallint" jt="5" mandatory="y" >
+				<comment><![CDATA[The star rating given from 1-5.]]></comment>
+			</column>
+			<column name="summary" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Summary text of the review.]]></comment>
+			</column>
+			<column name="body" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[The body text of the review.]]></comment>
+			</column>
+			<column name="name" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[The name of the user.]]></comment>
+			</column>
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<column name="helpful" type="integer" jt="4" mandatory="y" >
+				<defo><![CDATA[0]]></defo>
+				<comment><![CDATA[The number of times the review has been marked 'helpful'.]]></comment>
+			</column>
+			<column name="recommended" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[false]]></defo>
+				<comment><![CDATA[Whether the review recommends the product.]]></comment>
+			</column>
+			<column name="reported" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[false]]></defo>
+				<comment><![CDATA[Wether the review has been reported or not.]]></comment>
+			</column>
+			<index name="pk_reviews" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+	</schema>
+	<layout name="Default Layout" id="Layout-1272" joined_routing="y" show_column_type="y" show_page_borders="y" show_relation="columns" >
+		<entity schema="ratings-and-reviews" name="review_characteristics" color="C1D8EE" x="352" y="400" />
+		<entity schema="ratings-and-reviews" name="review_photos" color="C1D8EE" x="352" y="80" />
+		<entity schema="ratings-and-reviews" name="reviews" color="C1D8EE" x="48" y="80" />
+		<group name="Ratings and Reviews" color="B3E6E6" >
+			<entity schema="ratings-and-reviews" name="review_photos" />
+			<entity schema="ratings-and-reviews" name="review_characteristics" />
+			<entity schema="ratings-and-reviews" name="reviews" />
+		</group>
+	</layout>
+</project>

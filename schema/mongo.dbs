@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="ratings-and-reviews-mongo" id="Project-119f" database="MongoDb" >
+	<schema name="ratings-and-reviews-mongo" >
+		<table name="characteristics" prior="Collection" >
+			<column name="id" type="int" jt="4" mandatory="y" />
+			<column name="review_id" type="int" jt="4" mandatory="y" />
+			<column name="product_id" type="int" jt="4" mandatory="y" />
+			<column name="name" type="string" jt="12" mandatory="y" />
+			<column name="rating" type="int" jt="4" mandatory="y" />
+			<fk name="fk_characteristics_reviews" virtual="y" to_schema="ratings-and-reviews-mongo" to_table="reviews" >
+				<fk_column name="review_id" pk="id" />
+			</fk>
+		</table>
+		<table name="review_photos" prior="Collection" >
+			<column name="id" type="int" jt="4" mandatory="y" />
+			<column name="review_id" type="int" jt="4" mandatory="y" />
+			<column name="product_id" type="int" jt="4" mandatory="y" />
+			<column name="url" type="string" jt="12" mandatory="y" />
+			<fk name="fk_review_photos_reviews" virtual="y" to_schema="ratings-and-reviews-mongo" to_table="reviews" >
+				<fk_column name="review_id" pk="id" />
+			</fk>
+		</table>
+		<table name="reviews" prior="Collection" >
+			<column name="id" type="int" jt="4" mandatory="y" />
+			<column name="product_id" type="int" jt="4" mandatory="y" />
+			<column name="date" type="date" jt="91" mandatory="y" >
+				<defo><![CDATA[sysdate]]></defo>
+			</column>
+			<column name="rating" type="double" jt="8" mandatory="y" />
+			<column name="summary" type="string" jt="12" mandatory="y" />
+			<column name="body" type="string" jt="12" mandatory="y" />
+			<column name="name" type="string" jt="12" mandatory="y" />
+			<column name="email" type="string" jt="12" mandatory="y" />
+			<column name="helpful" type="int" jt="4" mandatory="y" >
+				<defo><![CDATA[0]]></defo>
+			</column>
+			<column name="recommended" type="bool" jt="16" />
+			<column name="reported" type="bool" jt="16" mandatory="y" />
+		</table>
+	</schema>
+	<connector name="MyDb" database="MySql" host="localhost" port="3306" user="root" />
+	<layout name="Default Layout" id="Layout-12dc" joined_routing="y" show_column_type="y" show_relation="columns" >
+		<entity schema="ratings-and-reviews-mongo" name="characteristics" color="3986C1" x="352" y="272" />
+		<entity schema="ratings-and-reviews-mongo" name="review_photos" color="3986C1" x="352" y="80" />
+		<entity schema="ratings-and-reviews-mongo" name="reviews" color="3986C1" x="48" y="80" />
+		<group name="Ratings and Reviews" color="C4E0F9" >
+			<entity schema="ratings-and-reviews-mongo" name="reviews" />
+			<entity schema="ratings-and-reviews-mongo" name="review_photos" />
+			<entity schema="ratings-and-reviews-mongo" name="characteristics" />
+		</group>
+	</layout>
+</project>
