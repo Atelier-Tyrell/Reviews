@@ -1,27 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="ratings-and-reviews" id="Project-119f" database="PostgreSQL" >
 	<schema name="ratings-and-reviews" >
-		<table name="review_characteristics" >
-			<column name="id" type="integer" jt="4" mandatory="y" />
-			<column name="review_id" type="integer" jt="4" mandatory="y" >
-				<comment><![CDATA[The id of the associated review.]]></comment>
-			</column>
-			<column name="product_id" type="integer" jt="4" >
-				<comment><![CDATA[The id of the associated product.]]></comment>
-			</column>
-			<column name="name" type="varchar" length="100" jt="12" >
-				<comment><![CDATA[The name of the characteristic.]]></comment>
-			</column>
-			<column name="rating" type="smallint" jt="5" mandatory="y" >
-				<comment><![CDATA[The rating of the characteristic.]]></comment>
-			</column>
-			<index name="pk_review_characteristics" unique="PRIMARY_KEY" >
-				<column name="id" />
-			</index>
-			<fk name="fk_review_characteristics" to_schema="ratings-and-reviews" to_table="reviews" >
-				<fk_column name="review_id" pk="id" />
-			</fk>
-		</table>
 		<table name="review_photos" >
 			<comment><![CDATA[Photos added to reviews.]]></comment>
 			<column name="id" type="integer" jt="4" mandatory="y" />
@@ -32,6 +11,9 @@
 			</column>
 			<index name="pk_review_photos" unique="PRIMARY_KEY" >
 				<column name="id" />
+			</index>
+			<index name="unq_review_photos_product_id" unique="UNIQUE_KEY" >
+				<column name="product_id" />
 			</index>
 			<fk name="fk_review_photos_reviews" to_schema="ratings-and-reviews" to_table="reviews" >
 				<fk_column name="review_id" pk="id" />
@@ -69,19 +51,62 @@
 				<defo><![CDATA[false]]></defo>
 				<comment><![CDATA[Wether the review has been reported or not.]]></comment>
 			</column>
+			<column name="fit" type="integer" jt="4" />
+			<column name="width" type="integer" jt="4" />
+			<column name="length" type="integer" jt="4" />
+			<column name="comfort" type="integer" jt="4" />
+			<column name="quality" type="integer" jt="4" />
 			<index name="pk_reviews" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
 		</table>
 	</schema>
 	<layout name="Default Layout" id="Layout-1272" joined_routing="y" show_column_type="y" show_page_borders="y" show_relation="columns" >
-		<entity schema="ratings-and-reviews" name="review_characteristics" color="C1D8EE" x="352" y="400" />
-		<entity schema="ratings-and-reviews" name="review_photos" color="C1D8EE" x="352" y="80" />
-		<entity schema="ratings-and-reviews" name="reviews" color="C1D8EE" x="48" y="80" />
+		<entity schema="ratings-and-reviews" name="review_photos" color="C1D8EE" x="400" y="80" />
+		<entity schema="ratings-and-reviews" name="reviews" color="C1D8EE" x="48" y="144" />
 		<group name="Ratings and Reviews" color="B3E6E6" >
 			<entity schema="ratings-and-reviews" name="review_photos" />
-			<entity schema="ratings-and-reviews" name="review_characteristics" />
 			<entity schema="ratings-and-reviews" name="reviews" />
 		</group>
+		<script name="review_characteristics" id="Editor-2612" language="SQL" >
+			<string><![CDATA[CREATE  TABLE "ratings-and-reviews".review_characteristics ( 
+	id                   integer  NOT NULL  ,
+	review_id            integer  NOT NULL  ,
+	product_id           integer    ,
+	name                 varchar(100)    ,
+	rating               smallint  NOT NULL  ,
+	CONSTRAINT pk_review_characteristics PRIMARY KEY ( id )
+ );
+
+ALTER TABLE "ratings-and-reviews".review_characteristics ADD CONSTRAINT fk_review_characteristics FOREIGN KEY ( review_id ) REFERENCES "ratings-and-reviews".reviews( id );
+
+ALTER TABLE "ratings-and-reviews".review_characteristics ADD CONSTRAINT fk_review_characteristics_haha FOREIGN KEY ( product_id ) REFERENCES "ratings-and-reviews".review_photos( product_id );
+
+COMMENT ON COLUMN "ratings-and-reviews".review_characteristics.review_id IS 'The id of the associated review.';
+
+COMMENT ON COLUMN "ratings-and-reviews".review_characteristics.product_id IS 'The id of the associated product.';
+
+COMMENT ON COLUMN "ratings-and-reviews".review_characteristics.name IS 'The name of the characteristic.';
+
+COMMENT ON COLUMN "ratings-and-reviews".review_characteristics.rating IS 'The rating of the characteristic.';
+]]></string>
+		</script>
+		<script name="review_photos" id="Editor-cb1" language="SQL" >
+			<string><![CDATA[CREATE  TABLE "ratings-and-reviews".review_photos ( 
+	id                   integer  NOT NULL  ,
+	review_id            integer  NOT NULL  ,
+	product_id           integer  NOT NULL  ,
+	url                  varchar  NOT NULL  ,
+	CONSTRAINT pk_review_photos PRIMARY KEY ( id ),
+	CONSTRAINT unq_review_photos_product_id UNIQUE ( product_id ) 
+ );
+
+ALTER TABLE "ratings-and-reviews".review_photos ADD CONSTRAINT fk_review_photos_reviews FOREIGN KEY ( review_id ) REFERENCES "ratings-and-reviews".reviews( id );
+
+COMMENT ON TABLE "ratings-and-reviews".review_photos IS 'Photos added to reviews.';
+
+COMMENT ON COLUMN "ratings-and-reviews".review_photos.url IS 'The url of the photo.';
+]]></string>
+		</script>
 	</layout>
 </project>
