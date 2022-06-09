@@ -2,7 +2,10 @@
  * This script creates the Ratings and Reviews tables.
  */
 
+const format = require('pg-format');
 const pool = require('./db').pool;
+const { Client } = require('pg');
+
 
 const readline = require('readline').createInterface({
   input: process.stdin,
@@ -20,8 +23,26 @@ const readline = require('readline').createInterface({
     process.exit();
   }
 
-  const client = await pool.connect();
+  console.log('Re-creating the database...');
+  const tempClient = new Client({
+    database: 'template1',
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD
+  })
 
+  try {
+    await tempClient.connect();
+    await tempClient.query(format('DROP DATABASE IF EXISTS %s;', process.env.DATABASE));
+    await tempClient.query(format('CREATE DATABASE %s;', [process.env.DATABASE]));
+    await tempClient.end();
+  } catch (error) {
+    await tempClient.end();
+    console.log(error);
+    process.exit();
+  }
+
+  // Connect to pool and build the tables
+  const client = await pool.connect();
   try {
     console.log('Deleting existing schema...');
     await client.query(
@@ -150,19 +171,11 @@ const readline = require('readline').createInterface({
     )
 
     console.log('Setting fit_id values');
-    await client.query(
-      `UPDATE reviews.reviews SET(fit_id) =
-        (SELECT id FROM reviews.characteristics
-        WHERE reviews.reviews.product_id = reviews.characteristics.product_id
-        AND reviews.characteristics.name = 'Fit');`
-    )
-
-    console.log('Setting fit values');
-    await client.query(
-      `UPDATE reviews.reviews SET(fit) =
-        (SELECT value FROM reviews.characteristicsreviews
-        WHERE reviews.characteristicreviews.characteristic_id = reviews.reviews.fit_id);`
-    )
+    // await client.query(
+      // for all rows of reviews
+      //
+    //  `UPDATE reviews.reviews SET fit_id = 3`
+   // )
 
     console.log('Adding foreign keys and setting timestamps...');
     await client.query(
@@ -181,8 +194,9 @@ const readline = require('readline').createInterface({
 
     console.log('Done.');
     process.exit();
-  } finally {
     client.release();
+  } finally {
+//     client.release();
   }
 })().catch(error => {
   console.log(error)
