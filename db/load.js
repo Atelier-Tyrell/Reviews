@@ -149,6 +149,21 @@ const readline = require('readline').createInterface({
        CSV HEADER;`
     )
 
+    console.log('Setting fit_id values');
+    await client.query(
+      `UPDATE reviews.reviews SET(fit_id) =
+        (SELECT id FROM reviews.characteristics
+        WHERE reviews.reviews.product_id = reviews.characteristics.product_id
+        AND reviews.characteristics.name = 'Fit');`
+    )
+
+    console.log('Setting fit values');
+    await client.query(
+      `UPDATE reviews.reviews SET(fit) =
+        (SELECT value FROM reviews.characteristicsreviews
+        WHERE reviews.characteristicreviews.characteristic_id = reviews.reviews.fit_id);`
+    )
+
     console.log('Adding foreign keys and setting timestamps...');
     await client.query(
       `ALTER TABLE reviews.photos
