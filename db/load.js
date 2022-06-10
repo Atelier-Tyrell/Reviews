@@ -5,7 +5,7 @@
 const format = require('pg-format');
 const { Client } = require('pg');
 
-const pool = require('./db').pool;
+const pool = require('./db');
 
 const readline = require('readline').createInterface({
   input: process.stdin,
@@ -98,6 +98,7 @@ const readline = require('readline').createInterface({
        );`
     )
 
+
     console.log('Creating photos table...');
     await client.query(
       `CREATE  TABLE if not exists reviews.photos (
@@ -121,9 +122,17 @@ const readline = require('readline').createInterface({
         characteristic_id    integer  NOT NULL  ,
         review_id            integer  NOT NULL  ,
         value                integer  NOT NULL  ,
+        product_id           integer  ,
         name                 varchar);`
     )
 
+    console.log('Copying product ids in to products table...');
+    await client.query(
+      `COPY reviews.products (id)
+       FROM '/home/jordan/hr/reviewsAPI/db/csv/product.csv'
+       DELIMITER ','
+       CSV HEADER;`
+    )
 
     console.log('Copying characteristics csv into characteristics table...');
     await client.query(
@@ -165,7 +174,8 @@ const readline = require('readline').createInterface({
     console.log('Updating characteristics reviews table to include name...');
     await client.query(
       `UPDATE reviews.characteristicsreviews
-       SET name = reviews.characteristics.name
+       SET name = reviews.characteristics.name,
+           product_id = reviews.characteristics.product_id
        FROM reviews.characteristics
        WHERE reviews.characteristicsreviews.characteristic_id = reviews.characteristics.id;`
     )
