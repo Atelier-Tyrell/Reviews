@@ -69,25 +69,13 @@ const readline = require('readline').createInterface({
         email                varchar  NOT NULL  ,
         response             varchar    ,
         helpful              integer DEFAULT 0 NOT NULL  ,
-        fit                  integer    ,
-        size                 integer    ,
-        width                integer    ,
-        length               integer    ,
-        comfort              integer    ,
-        quality              integer    ,
-        fit_id               integer    ,
-        size_id              integer    ,
-        width_id             integer    ,
-        length_id            integer    ,
-        comfort_id           integer    ,
-        quality_id           integer    ,
         CONSTRAINT pk_reviews PRIMARY KEY ( id )
        );`
     )
 
     console.log('Creating meta table...');
     await client.query(
-      `CREATE  TABLE if not exists reviews.meta (
+      `CREATE  TABLE if not exists reviews.products (
         id                   integer  NOT NULL  ,
         num_1_stars          integer DEFAULT 0 NOT NULL  ,
         num_2_stars          integer DEFAULT 0 NOT NULL  ,
@@ -180,82 +168,6 @@ const readline = require('readline').createInterface({
        SET name = reviews.characteristics.name
        FROM reviews.characteristics
        WHERE reviews.characteristicsreviews.characteristic_id = reviews.characteristics.id;`
-    )
-
-    console.log('Updating reviews table to include fit...');
-    await client.query(
-      `UPDATE reviews.reviews
-       SET
-         fit = reviews.characteristicsreviews.value,
-         fit_id = reviews.characteristicsreviews.characteristic_id
-       FROM reviews.characteristicsreviews
-       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
-       AND reviews.characteristicsreviews.name = 'Fit';`
-    )
-
-    console.log('Updating reviews table to include length...');
-    await client.query(
-      `UPDATE reviews.reviews
-       SET
-         length = reviews.characteristicsreviews.value,
-         length_id = reviews.characteristicsreviews.characteristic_id
-       FROM reviews.characteristicsreviews
-       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
-       AND reviews.characteristicsreviews.name = 'Length';`
-    )
-
-    console.log('Updating reviews table to include comfort...');
-    await client.query(
-      `UPDATE reviews.reviews
-       SET
-         comfort = reviews.characteristicsreviews.value,
-         comfort_id = reviews.characteristicsreviews.characteristic_id
-       FROM reviews.characteristicsreviews
-       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
-       AND reviews.characteristicsreviews.name = 'Comfort';`
-    )
-
-    console.log('Updating reviews table to include quality...');
-    await client.query(
-      `UPDATE reviews.reviews
-       SET
-         length = reviews.characteristicsreviews.value,
-         length_id = reviews.characteristicsreviews.characteristic_id
-       FROM reviews.characteristicsreviews
-       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
-       AND reviews.characteristicsreviews.name = 'Length';`
-    )
-
-    console.log('Updating reviews table to include size...');
-    await client.query(
-      `UPDATE reviews.reviews
-       SET
-         size = reviews.characteristicsreviews.value,
-         size_id = reviews.characteristicsreviews.characteristic_id
-       FROM reviews.characteristicsreviews
-       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
-       AND reviews.characteristicsreviews.name = 'Size';`
-    )
-
-
-    console.log('Updating reviews table to include width...');
-    await client.query(
-      `UPDATE reviews.reviews
-       SET
-         width = reviews.characteristicsreviews.value,
-         width_id = reviews.characteristicsreviews.characteristic_id
-       FROM reviews.characteristicsreviews
-       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
-       AND reviews.characteristicsreviews.name = 'Width';`
-    )
-
-    console.log('Dropping temporary characteristics tables...');
-    await client.query(
-      `DROP TABLE reviews.characteristics;`
-    )
-
-    await client.query(
-      `DROP TABLE reviews.characteristicsreviews;`
     )
 
     console.log('Adding foreign keys and setting timestamps...');
