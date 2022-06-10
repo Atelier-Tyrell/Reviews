@@ -3,9 +3,9 @@
  */
 
 const format = require('pg-format');
-const pool = require('./db').pool;
 const { Client } = require('pg');
 
+const pool = require('./db').pool;
 
 const readline = require('readline').createInterface({
   input: process.stdin,
@@ -70,11 +70,13 @@ const readline = require('readline').createInterface({
         response             varchar    ,
         helpful              integer DEFAULT 0 NOT NULL  ,
         fit                  integer    ,
+        size                 integer    ,
         width                integer    ,
         length               integer    ,
         comfort              integer    ,
         quality              integer    ,
         fit_id               integer    ,
+        size_id              integer    ,
         width_id             integer    ,
         length_id            integer    ,
         comfort_id           integer    ,
@@ -130,8 +132,10 @@ const readline = require('readline').createInterface({
         id                   integer  NOT NULL  ,
         characteristic_id    integer  NOT NULL  ,
         review_id            integer  NOT NULL  ,
-        value                integer  NOT NULL);`
+        value                integer  NOT NULL  ,
+        name                 varchar);`
     )
+
 
     console.log('Copying characteristics csv into characteristics table...');
     await client.query(
@@ -170,12 +174,89 @@ const readline = require('readline').createInterface({
        CSV HEADER;`
     )
 
-    console.log('Setting fit_id values');
-    // await client.query(
-      // for all rows of reviews
-      //
-    //  `UPDATE reviews.reviews SET fit_id = 3`
-   // )
+    console.log('Updating characteristics reviews table to include name...');
+    await client.query(
+      `UPDATE reviews.characteristicsreviews
+       SET name = reviews.characteristics.name
+       FROM reviews.characteristics
+       WHERE reviews.characteristicsreviews.characteristic_id = reviews.characteristics.id;`
+    )
+
+    console.log('Updating reviews table to include fit...');
+    await client.query(
+      `UPDATE reviews.reviews
+       SET
+         fit = reviews.characteristicsreviews.value,
+         fit_id = reviews.characteristicsreviews.characteristic_id
+       FROM reviews.characteristicsreviews
+       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
+       AND reviews.characteristicsreviews.name = 'Fit';`
+    )
+
+    console.log('Updating reviews table to include length...');
+    await client.query(
+      `UPDATE reviews.reviews
+       SET
+         length = reviews.characteristicsreviews.value,
+         length_id = reviews.characteristicsreviews.characteristic_id
+       FROM reviews.characteristicsreviews
+       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
+       AND reviews.characteristicsreviews.name = 'Length';`
+    )
+
+    console.log('Updating reviews table to include comfort...');
+    await client.query(
+      `UPDATE reviews.reviews
+       SET
+         comfort = reviews.characteristicsreviews.value,
+         comfort_id = reviews.characteristicsreviews.characteristic_id
+       FROM reviews.characteristicsreviews
+       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
+       AND reviews.characteristicsreviews.name = 'Comfort';`
+    )
+
+    console.log('Updating reviews table to include quality...');
+    await client.query(
+      `UPDATE reviews.reviews
+       SET
+         length = reviews.characteristicsreviews.value,
+         length_id = reviews.characteristicsreviews.characteristic_id
+       FROM reviews.characteristicsreviews
+       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
+       AND reviews.characteristicsreviews.name = 'Length';`
+    )
+
+    console.log('Updating reviews table to include size...');
+    await client.query(
+      `UPDATE reviews.reviews
+       SET
+         size = reviews.characteristicsreviews.value,
+         size_id = reviews.characteristicsreviews.characteristic_id
+       FROM reviews.characteristicsreviews
+       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
+       AND reviews.characteristicsreviews.name = 'Size';`
+    )
+
+
+    console.log('Updating reviews table to include width...');
+    await client.query(
+      `UPDATE reviews.reviews
+       SET
+         width = reviews.characteristicsreviews.value,
+         width_id = reviews.characteristicsreviews.characteristic_id
+       FROM reviews.characteristicsreviews
+       WHERE reviews.characteristicsreviews.review_id = reviews.reviews.id
+       AND reviews.characteristicsreviews.name = 'Width';`
+    )
+
+    console.log('Dropping temporary characteristics tables...');
+    await client.query(
+      `DROP TABLE reviews.characteristics;`
+    )
+
+    await client.query(
+      `DROP TABLE reviews.characteristicsreviews;`
+    )
 
     console.log('Adding foreign keys and setting timestamps...');
     await client.query(
@@ -196,7 +277,7 @@ const readline = require('readline').createInterface({
     process.exit();
     client.release();
   } finally {
-//     client.release();
+    client.release();
   }
 })().catch(error => {
   console.log(error)
