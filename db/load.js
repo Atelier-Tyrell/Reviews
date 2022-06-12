@@ -422,8 +422,9 @@ const log = (msg) => {
        ALTER COLUMN created_at SET DEFAULT LOCALTIMESTAMP(3);`
     )
 
+    log('Creating indices on photos and reviews sorting');
     await pool.query(
-      `CREATE INDEX photos_idx ON reviews.photos(product_id);`
+      `CREATE INDEX photos_idx ON reviews.photos(review_id);`
     )
 
     await pool.query(
