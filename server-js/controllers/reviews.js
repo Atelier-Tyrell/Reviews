@@ -1,4 +1,4 @@
-const models = require('./models');
+const models = require('../models/models');
 
 const reviews = async (req, res) => {
   const page = req.query.page || 1;
@@ -11,9 +11,13 @@ const reviews = async (req, res) => {
     return;
   }
 
-  const response = await models.reviews(id, page, count, sort);
-  console.log(response.rows);
-  res.sendStatus(200);
+  try {
+    const response = await models.reviews(id, page, count, sort);
+    console.log(response.rows);
+    res.sendStatus(200);
+  } catch (error) {
+    res.sendStatus(504);
+  }
 }
 
 module.exports = reviews;

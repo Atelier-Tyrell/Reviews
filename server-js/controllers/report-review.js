@@ -1,4 +1,4 @@
-const models = require('./models');
+const models = require('../models/models');
 
 const reportReview = async (req, res) => {
   try {
