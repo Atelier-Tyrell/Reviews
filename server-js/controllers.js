@@ -13,10 +13,17 @@ const getReviews = async (req, res) => {
 
   const response = await models.getReviews(id, page, count, sort);
   console.log(response.rows);
+  res.sendStatus(200);
+}
 
+const getMetadata = async (req, res) => {
+  const id = req.query.id;
+  const query = await models.getMetadata(id);
+  console.log(query);
   res.sendStatus(200);
 }
 
 module.exports = {
   getReviews,
+  getMetadata
 }
