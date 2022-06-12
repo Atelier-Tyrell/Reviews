@@ -12,9 +12,9 @@ app.use(express.json());
 app.use(morgan('combined'));
 
 /* Routes */
-app.get('/reviews', (req, res) => controllers.getReviews(req, res));
+app.get('/reviews/', (req, res) => controllers.getReviews(req, res));
 
-app.get('/reviews/meta', (req, res) => {});
+app.get('/reviews/meta', (req, res) => controllers.getMetadata(req, res));
 
 app.post('/reviews', (req, res) => {
   // Body Parameters
