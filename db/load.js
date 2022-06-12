@@ -156,7 +156,6 @@ const logT = () => {
        FROM reviews.temp;`
     );
 
-
     await pool.query(
       `DROP TABLE reviews.temp;`
     )
