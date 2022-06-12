@@ -14,7 +14,7 @@ const readline = require('readline').createInterface({
 
 const log = (msg) => {
   console.log(
-    new Date().toLocaleString().split(' ').slice(1).join(' ') + ' ' + msg
+    `[${new Date().toLocaleString().split(' ').slice(1).join(' ')}] ${msg}`
   );
 }
 
