@@ -12,6 +12,10 @@ const readline = require('readline').createInterface({
   output: process.stdout,
 });
 
+const logT = () => {
+  console.log(new Date().toLocaleString().split(' ').slice(1).join(' '));
+}
+
 ;(async () => {
   console.log('This action will overwrite all tables!');
   console.log('Type OK to proceed:');
@@ -23,7 +27,7 @@ const readline = require('readline').createInterface({
     process.exit();
   }
 
-  console.log('Re-creating the database...');
+  console.log(logT() + 'Re-creating the database...');
   const tempClient = new Client({
     database: 'template1',
     user: process.env.POSTGRES_USER,
@@ -43,17 +47,17 @@ const readline = require('readline').createInterface({
 
   // Connect to pool and build the tables
   try {
-    console.log('Deleting existing schema...');
+    console.log(logT() + 'Deleting existing schema...');
     await pool.query(
       `DROP SCHEMA if exists reviews CASCADE;`
     )
 
-    console.log('Creating new schema...');
+    console.log(logT() + 'Creating new schema...');
     await pool.query(
       `CREATE SCHEMA reviews;`
     )
 
-    console.log('Creating reviews table...');
+    console.log(logT() + 'Creating reviews table...');
     await pool.query(
       `CREATE  TABLE if not exists reviews.reviews (
         id                   integer  NOT NULL  ,
@@ -72,7 +76,7 @@ const readline = require('readline').createInterface({
        );`
     )
 
-    console.log('Creating meta table...');
+    console.log(logT() + 'Creating meta table...');
     await pool.query(
       `CREATE  TABLE if not exists reviews.products (
         id                   integer    NOT NULL,
@@ -98,7 +102,7 @@ const readline = require('readline').createInterface({
     )
 
 
-    console.log('Creating photos table...');
+    console.log(logT() + 'Creating photos table...');
     await pool.query(
       `CREATE  TABLE if not exists reviews.photos (
         id                   integer  NOT NULL  ,
@@ -106,7 +110,7 @@ const readline = require('readline').createInterface({
         url                  varchar  NOT NULL);`
     )
 
-    console.log('Creating characteristics table...');
+    console.log(logT() + 'Creating characteristics table...');
     await pool.query(
       `CREATE TABLE if not exists reviews.characteristics (
         id                   integer  NOT NULL  ,
@@ -114,7 +118,7 @@ const readline = require('readline').createInterface({
         name                 varchar  NOT NULL);`
     )
 
-    console.log('Creating characteristics reviews table...');
+    console.log(logT() + 'Creating characteristics reviews table...');
     await pool.query(
       `CREATE TABLE if not exists reviews.characteristicsreviews (
         id                   integer  NOT NULL  ,
@@ -125,7 +129,7 @@ const readline = require('readline').createInterface({
         name                 varchar);`
     )
 
-    console.log('Creating temporary product table...');
+    console.log(logT() + 'Creating temporary product table...');
     await pool.query(
       `CREATE TABLE if not exists reviews.temp (
           id  integer,
@@ -138,7 +142,7 @@ const readline = require('readline').createInterface({
     )
 
 
-    console.log('Copying product ids in to temporary table...');
+    console.log(logT() + 'Copying product ids in to temporary table...');
     await pool.query(
       `COPY reviews.temp (id, name, slogan, description, category, default_price)
        FROM '/home/jordan/hr/reviewsAPI/db/csv/product.csv'
@@ -157,7 +161,7 @@ const readline = require('readline').createInterface({
       `DROP TABLE reviews.temp;`
     )
 
-    console.log('Copying characteristics csv into characteristics table...');
+    console.log(logT() + 'Copying characteristics csv into characteristics table...');
     await pool.query(
       `COPY reviews.characteristics (id, product_id, name)
        FROM '/home/jordan/hr/reviewsAPI/db/csv/characteristics.csv'
@@ -165,7 +169,7 @@ const readline = require('readline').createInterface({
        CSV HEADER;`
     )
 
-    console.log('Copying characteristic reviews csv into cr table...');
+    console.log(logT() + 'Copying characteristic reviews csv into cr table...');
     await pool.query(
       `COPY reviews.characteristicsreviews (
          id, characteristic_id, review_id, value
@@ -175,7 +179,7 @@ const readline = require('readline').createInterface({
        CSV HEADER;`
     )
 
-    console.log('Copying reviews csv into reviews table...');
+    console.log(logT() + 'Copying reviews csv into reviews table...');
     await pool.query(
       `COPY reviews.reviews (
          id, product_id, rating, created_at, summary, body,
@@ -186,7 +190,7 @@ const readline = require('readline').createInterface({
        CSV HEADER;`
     )
 
-    console.log('Copying photos csv into photos table...');
+    console.log(logT() + 'Copying photos csv into photos table...');
     await pool.query(
       `COPY reviews.photos (id, review_id, url)
        FROM '/home/jordan/hr/reviewsAPI/db/csv/reviews_photos.csv'
@@ -194,7 +198,7 @@ const readline = require('readline').createInterface({
        CSV HEADER;`
     )
 
-    console.log('Updating characteristics reviews table to include name...');
+    console.log(logT() + 'Updating characteristics reviews table to include name...');
     await pool.query(
       `UPDATE reviews.characteristicsreviews
        SET name = reviews.characteristics.name,
@@ -205,7 +209,7 @@ const readline = require('readline').createInterface({
 
     // Adding indexes is necessary here because otherwise the following update
     // queries will take dramatically longer
-    console.log('Adding indices to products reviews, and cr tables...');
+    console.log(logT() + 'Adding indices to products reviews, and cr tables...');
     await pool.query(
       `CREATE INDEX reviews_idx ON reviews.reviews (product_id);`
     )
@@ -218,7 +222,7 @@ const readline = require('readline').createInterface({
       `CREATE INDEX characteristics_idx ON reviews.characteristicsreviews(product_id);`
     )
 
-    console.log('Updating reviews count for products table');
+    console.log(logT() + 'Updating reviews count for products table');
     await pool.query(
       `UPDATE reviews.products
        SET num_reviews =
@@ -227,7 +231,7 @@ const readline = require('readline').createInterface({
           WHERE rr.product_id = reviews.products.id)`
     )
 
-    console.log('Updating star counts...');
+    console.log(logT() + 'Updating star counts...');
     await pool.query(
       `UPDATE reviews.products
        SET num_1_stars =
@@ -283,7 +287,7 @@ const readline = require('readline').createInterface({
           AND rr.recommended = true);`
     )
 
-    console.log('Updating width characteristics metadata...');
+    console.log(logT() + 'Updating width characteristics metadata...');
     await pool.query(
       `UPDATE reviews.products
        SET width_total =
@@ -293,7 +297,7 @@ const readline = require('readline').createInterface({
           AND rc.name = 'Width');`
     )
 
-    console.log('Updating fit characteristics metadata...');
+    console.log(logT() + 'Updating fit characteristics metadata...');
     await pool.query(
       `UPDATE reviews.products
        SET fit_total =
@@ -303,7 +307,7 @@ const readline = require('readline').createInterface({
           AND rc.name = 'Fit');`
     )
 
-    console.log('Updating length characteristics metadata...');
+    console.log(logT() + 'Updating length characteristics metadata...');
     await pool.query(
       `UPDATE reviews.products
        SET length_total =
@@ -313,7 +317,7 @@ const readline = require('readline').createInterface({
           AND rc.name = 'Length');`
     )
 
-    console.log('Updating comfort characteristics metadata...');
+    console.log(logT() + 'Updating comfort characteristics metadata...');
     await pool.query(
       `UPDATE reviews.products
        SET comfort_total =
@@ -323,7 +327,7 @@ const readline = require('readline').createInterface({
           AND rc.name = 'Comfort');`
     )
 
-    console.log('Updating quality characteristics metadata...');
+    console.log(logT() + 'Updating quality characteristics metadata...');
     await pool.query(
       `UPDATE reviews.products
        SET quality_total =
@@ -333,7 +337,7 @@ const readline = require('readline').createInterface({
           AND rc.name = 'Quality');`
     )
 
-    console.log('Updating product characteristic ids...');
+    console.log(logT() + 'Updating product characteristic ids...');
     await pool.query(
       `UPDATE reviews.products rp
          SET fit_id = rc.id
@@ -380,7 +384,7 @@ const readline = require('readline').createInterface({
       ;`
     )
 
-    console.log('Adding foreign keys and setting timestamps...');
+    console.log(logT() + 'Adding foreign keys and setting timestamps...');
     await pool.query(
       `ALTER TABLE reviews.photos
        ADD CONSTRAINT fk_review_photos_reviews
