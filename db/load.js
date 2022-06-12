@@ -88,11 +88,13 @@ const log = (msg) => {
         num_4_stars          integer DEFAULT 0   ,
         num_5_stars          integer DEFAULT 0   ,
         fit_id               integer     ,
+        size_id              integer     ,
         width_id             integer     ,
         length_id            integer     ,
         comfort_id           integer     ,
         quality_id           integer     ,
         fit_total            integer     ,
+        size_total           integer     ,
         width_total          integer     ,
         length_total         integer     ,
         comfort_total        integer     ,
@@ -223,6 +225,7 @@ const log = (msg) => {
       `CREATE INDEX characteristics_idx ON reviews.characteristicsreviews(product_id);`
     )
 
+
     log('Updating reviews count for products table');
     await pool.query(
       `UPDATE reviews.products
@@ -298,6 +301,16 @@ const log = (msg) => {
           AND rc.name = 'Width');`
     )
 
+    log('Updating size characteristics metadata...');
+    await pool.query(
+      `UPDATE reviews.products
+       SET size_total =
+         (SELECT sum(value)
+          FROM reviews.characteristicsreviews as rc
+          WHERE rc.product_id = reviews.products.id
+          AND rc.name = 'Size');`
+    )
+
     log('Updating fit characteristics metadata...');
     await pool.query(
       `UPDATE reviews.products
@@ -345,6 +358,15 @@ const log = (msg) => {
          FROM reviews.characteristics rc
          WHERE rc.product_id = rp.id
          AND rc.name = 'Fit'
+      ;`
+    )
+
+    await pool.query(
+      `UPDATE reviews.products rp
+         SET size_id = rc.id
+         FROM reviews.characteristics rc
+         WHERE rc.product_id = rp.id
+         AND rc.name = 'Size'
       ;`
     )
 
@@ -398,6 +420,18 @@ const log = (msg) => {
        ALTER COLUMN created_at TYPE timestamp(3)
        USING to_timestamp(created_at / 1000.0),
        ALTER COLUMN created_at SET DEFAULT LOCALTIMESTAMP(3);`
+    )
+
+    await pool.query(
+      `CREATE INDEX photos_idx ON reviews.photos(product_id);`
+    )
+
+    await pool.query(
+      `CREATE INDEX reviews_created_idx ON reviews.reviews(created_at ASC);`
+    )
+
+    await pool.query(
+      `CREATE INDEX reviews_helpfullnes_idx ON reviews.reviews(helpful DESC);`
     )
 
     console.log('Done.');
