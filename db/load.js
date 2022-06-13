@@ -62,7 +62,7 @@ const log = (msg) => {
     log('Creating reviews table...');
     await pool.query(
       `CREATE  TABLE if not exists reviews.reviews (
-        id                   integer  NOT NULL  ,
+        id                   serial PRIMARY KEY ,
         product_id           integer  NOT NULL  ,
         rating               smallint  NOT NULL  ,
         created_at           bigint   NOT NULL   ,
@@ -71,10 +71,9 @@ const log = (msg) => {
         recommended          boolean DEFAULT false NOT NULL  ,
         reported             boolean DEFAULT false NOT NULL  ,
         name                 varchar  NOT NULL  ,
-        email                varchar  NOT NULL  ,
+        email                varchar  NOT NULL ,
         response             varchar    ,
-        helpful              integer DEFAULT 0 NOT NULL  ,
-        CONSTRAINT pk_reviews PRIMARY KEY ( id )
+        helpful              integer DEFAULT 0 NOT NULL
        );`
     )
 
@@ -105,13 +104,13 @@ const log = (msg) => {
        );`
     )
 
-
     log('Creating photos table...');
     await pool.query(
       `CREATE  TABLE if not exists reviews.photos (
-        id                   integer  NOT NULL  ,
+        id                   serial PRIMARY KEY,
         review_id            integer  NOT NULL  ,
-        url                  varchar  NOT NULL);`
+        url                  varchar  NOT NULL
+      );`
     )
 
     log('Creating characteristics table...');
@@ -190,16 +189,18 @@ const log = (msg) => {
        )
        FROM '/home/jordan/hr/reviewsAPI/db/csv/reviews.csv'
        DELIMITER ','
-       CSV HEADER;`
-    )
+       CSV HEADER;
+       SELECT setval('serial', max(id)) FROM reviews.reviews;
+    `)
 
     log('Copying photos csv into photos table...');
-    await pool.query(
-      `COPY reviews.photos (id, review_id, url)
+    await pool.query(`
+       COPY reviews.photos (id, review_id, url)
        FROM '/home/jordan/hr/reviewsAPI/db/csv/reviews_photos.csv'
        DELIMITER ','
-       CSV HEADER;`
-    )
+       CSV HEADER;
+       SELECT setval('serial', max(id)) FROM reviews.reviews;
+    `)
 
     log('Updating characteristics reviews table to include name...');
     await pool.query(
@@ -434,6 +435,12 @@ const log = (msg) => {
     await pool.query(
       `CREATE INDEX reviews_helpfullnes_idx ON reviews.reviews(helpful DESC);`
     )
+
+    console.log('Updating the serial IDs for reviews and photos...');
+    await pool.query(`
+      SELECT setval('reviews.reviews_id_seq', (SELECT MAX(id) FROM reviews.reviews)+1);
+      SELECT setval('reviews.photos_id_seq', (SELECT MAX(id) FROM reviews.photos)+1);
+    `)
 
     console.log('Done.');
     process.exit();
