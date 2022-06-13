@@ -13,8 +13,8 @@ const reviews = async (req, res) => {
 
   try {
     const response = await models.reviews(id, page, count, sort);
-    console.log(response.rows);
-    res.sendStatus(200);
+    console.log(response);
+    res.status(200).send(response);
   } catch (error) {
     res.sendStatus(504);
   }

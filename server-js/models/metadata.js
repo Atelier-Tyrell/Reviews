@@ -1,4 +1,4 @@
-const pool = require('../../db/db');
+const pool = require('../db/db');
 
 const metadata = async (id) => {
   try {
@@ -18,6 +18,10 @@ const metadata = async (id) => {
                   'Fit', json_build_object(
                       'id', fit_id,
                       'value', fit_total::float / num_reviews
+                  ),
+                  'Size', json_build_object(
+                      'id', size_id,
+                      'value', size_total::float / num_reviews
                   ),
                   'Width', json_build_object(
                       'id', width_id,
