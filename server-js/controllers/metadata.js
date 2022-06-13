@@ -1,7 +1,7 @@
 const models = require('../models/models');
 
 const metadata = async (req, res) => {
-  const id = req.query.id;
+  const id = req.query.product_id;
   try {
     const query = await models.metadata(id);
     res.status(200).send(query[0].json_build_object);
