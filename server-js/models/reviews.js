@@ -9,24 +9,39 @@ const reviews = async (id, page, count, sort) => {
              'product', $1::integer,
              'page', $5::integer,
              'count', $3::integer,
-             'results',
-               (SELECT
-                   json_agg(t)
-                 FROM (
-                   SELECT (
-                       'id', rr.id,
-                       'rating', rating,
-                       'summary', summary
-                   ) from reviews.reviews rr
-                   LEFT JOIN reviews.photos rp
-                   ON rr.id=rp.review_id
-                   WHERE rr.product_id = $1 AND rr.reported = false
-                   ORDER BY $2
-                   LIMIT $3
-                   OFFSET $4
-               ) t
-            )
-         )
+             'results', (
+
+              SELECT json_agg(
+                      json_build_object(
+                        'id', reviews.reviews.id,
+                        'rating', rating,
+                        'summary', summary,
+                        'recommend', recommended,
+                        'response', response,
+                        'body', body,
+                        'date', created_at,
+                        'review_name', name,
+                        'helpfulness', helpful,
+                         'photos', ( SELECT
+                          json_agg(
+                            json_build_object(
+                              'id', id,
+                              'url', url
+                            )
+                          )
+                            FROM reviews.photos
+                            WHERE reviews.photos.review_id = reviews.reviews.id
+                        )
+                      )
+                    ) as results
+                      FROM reviews.reviews
+                      WHERE reviews.reviews.product_id = $1
+                      AND reviews.reviews.reported = false
+                      ORDER BY $2
+                      LIMIT $3
+                      OFFSET $4
+           )
+        );
   `, [id, sort, count, offset, page]);
 
     return query.rows[0].json_build_object;
