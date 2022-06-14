@@ -434,7 +434,7 @@ const log = (msg) => {
       `CREATE INDEX reviews_helpfullnes_idx ON reviews.reviews(helpful DESC);`
     )
 
-    console.log('Updating the serial IDs for reviews and photos...');
+    log('Updating the serial IDs for reviews and photos...');
     await pool.query(`
       SELECT setval('reviews.reviews_id_seq', (SELECT MAX(id) FROM reviews.reviews)+1);
       SELECT setval('reviews.photos_id_seq', (SELECT MAX(id) FROM reviews.photos)+1);
