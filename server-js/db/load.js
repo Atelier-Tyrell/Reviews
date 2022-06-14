@@ -148,7 +148,7 @@ const log = (msg) => {
     log('Copying product ids in to temporary table...');
     await pool.query(
       `COPY reviews.temp (id, name, slogan, description, category, default_price)
-       FROM '/home/jordan/hr/reviewsAPI/db/csv/product.csv'
+       FROM '/home/jordan/hr/reviewsAPI/server-js/db/csv/product.csv'
        DELIMITER ','
        CSV HEADER;`
     )
@@ -166,7 +166,7 @@ const log = (msg) => {
     log('Copying characteristics csv into characteristics table...');
     await pool.query(
       `COPY reviews.characteristics (id, product_id, name)
-       FROM '/home/jordan/hr/reviewsAPI/db/csv/characteristics.csv'
+       FROM '/home/jordan/hr/reviewsAPI/server-js/db/csv/characteristics.csv'
        DELIMITER ','
        CSV HEADER;`
     )
@@ -176,7 +176,7 @@ const log = (msg) => {
       `COPY reviews.characteristicsreviews (
          id, characteristic_id, review_id, value
        )
-       FROM '/home/jordan/hr/reviewsAPI/db/csv/characteristic_reviews.csv'
+       FROM '/home/jordan/hr/reviewsAPI/server-js/db/csv/characteristic_reviews.csv'
        DELIMITER ','
        CSV HEADER;`
     )
@@ -187,19 +187,17 @@ const log = (msg) => {
          id, product_id, rating, created_at, summary, body,
          recommended, reported, name, email, response, helpful
        )
-       FROM '/home/jordan/hr/reviewsAPI/db/csv/reviews.csv'
+       FROM '/home/jordan/hr/reviewsAPI/server-js/db/csv/reviews.csv'
        DELIMITER ','
        CSV HEADER;
-       SELECT setval('serial', max(id)) FROM reviews.reviews;
     `)
 
     log('Copying photos csv into photos table...');
     await pool.query(`
        COPY reviews.photos (id, review_id, url)
-       FROM '/home/jordan/hr/reviewsAPI/db/csv/reviews_photos.csv'
+       FROM '/home/jordan/hr/reviewsAPI/server-js/db/csv/reviews_photos.csv'
        DELIMITER ','
        CSV HEADER;
-       SELECT setval('serial', max(id)) FROM reviews.reviews;
     `)
 
     log('Updating characteristics reviews table to include name...');
