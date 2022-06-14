@@ -3,7 +3,6 @@ const format = require('pg-format');
 
 const add = async (body) => {
   try {
-    console.log(body.characteristics);
     // INSERT REVIEW
     const reviewValues = [
       body.product_id,
@@ -73,7 +72,8 @@ const add = async (body) => {
       let fitColName = `${charName}_id`;
       let valueColName = `${charName}_total`;
       memo += format('    %s = %s,\n', fitColName, charId);
-      memo += format('    %s = %s + %s,\n',
+      memo += format(
+        '    %s = %s + %s,\n',
         valueColName,
         valueColName,
         body.characteristics[charId]
