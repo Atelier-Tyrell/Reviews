@@ -1,0 +1,2 @@
+[default.databases.reviews]
+url = "postgresql://postgres:s3cr3ts@localhost:5432/reviews"
