@@ -12,9 +12,11 @@ use rocket_db_pools::{sqlx, Database};
 mod db;
 mod metadata;
 mod review;
+mod new_review;
 
 use metadata::{avg_or_none, Characteristic, Characteristics, Metadata};
 use review::{Review, Reviews};
+use new_review::{NewReview};
 
 /// DATABASE
 #[derive(Database)]
@@ -175,6 +177,57 @@ async fn mark_reported(mut db: Connection<Pool>, review_id: i32) -> db::Result<(
 async fn file(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("public/").join(file)).await.ok()
 }
+
+#[post("/reviews", format= "application/json", data = "<input>")]
+async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Result<()> {
+    let review_id = sqlx::query!("INSERT INTO reviews.reviews
+                  (
+                      product_id,
+                      rating,
+                      summary,
+                      body,
+                      recommended,
+                      name,
+                      email
+                  )
+                  VALUES ($1, $2, $3, $4, $5, $6, $7)
+                  RETURNING id;",
+                  input.product_id,
+                  input.rating,
+                  input.summary,
+                  input.body,
+                  input.recommended,
+                  input.name,
+                  input.email)
+        .fetch_one(&mut *db)
+        .map_ok(|row| row.id)
+        .await?;
+
+    let star_col = format!("num_{}_stars", input.rating);
+    let recommended_inc = if input.recommended { 1 } else { 0 };
+
+    if input.photos.is_some() {
+        sqlx::query!("INSERT INTO reviews.photos (review_id, url)
+                      SELECT $1, value FROM json_array_elements($2);",
+                      review_id, input.photos)
+            .execute(&mut *db)
+            .await?;
+    }
+
+    // Update metadata
+    let query_string = format!("UPDATE reviews.producs rp
+                                SET
+                                    {} = {} + 1,
+                                    num_reviews = num_reviews + 1,
+                                    num_recommended = num_recommended + {},
+                                WHERE rp.id = {};",
+                                star_col, star_col, recommended_inc, input.product_id);
+
+
+    Ok(())
+
+}
+
 
 #[launch]
 async fn rocket() -> _ {
