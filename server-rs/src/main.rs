@@ -144,10 +144,36 @@ pub async fn get_metadata(mut db: Connection<Pool>, product_id: i32) -> Option<J
         .ok()
 }
 
+#[put("/reviews/<review_id>/helpful")]
+async fn mark_helpful(mut db: Connection<Pool>, review_id: i32) -> db::Result<()> {
+    sqlx::query!("UPDATE reviews.reviews
+                SET helpful = helpful + 1
+                WHERE id = $1",
+                review_id)
+        .execute(&mut *db)
+        .await?;
+
+    Ok(())
+}
+
+#[put("/reviews/<review_id>/helpful")]
+async fn mark_reported(mut db: Connection<Pool>, review_id: i32) -> db::Result<()> {
+    sqlx::query!("UPDATE reviews.reviews
+                  SET reported = true
+                  WHERE reviews.id = $1",
+                review_id)
+        .execute(&mut *db)
+        .await?;
+
+    Ok(())
+}
+
 #[launch]
 async fn rocket() -> _ {
     rocket::build()
         .attach(Pool::init())
         .mount("/", routes![get_metadata])
         .mount("/", routes![get_reviews])
+        .mount("/", routes![mark_helpful])
+        .mount("/", routes![mark_reported])
 }
