@@ -83,7 +83,7 @@ pub async fn get_reviews(
                 date: r.created_at.to_string(),
                 reviewer_name: r.name,
                 helpfulness: r.helpful,
-                photos: r.photos.into_iter().map(|p| p).collect(),
+                photos: r.photos,
             })
             .collect();
 
@@ -99,7 +99,7 @@ pub async fn get_reviews(
     Ok(Json(reviews))
 }
 
-#[get("/metadata?<product_id>")]
+#[get("/reviews/meta?<product_id>")]
 pub async fn get_metadata(mut db: Connection<Pool>, product_id: i32) -> Option<Json<Metadata>> {
     sqlx::query!("SELECT * FROM reviews.products WHERE id = $1", product_id)
         .fetch_one(&mut *db)

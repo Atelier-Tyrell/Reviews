@@ -21,7 +21,7 @@ pub struct Review {
     pub date: String,
     pub reviewer_name: String,
     pub helpfulness: i32,
-    pub photos: Vec<serde_json::Value>,
+    pub photos: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize, Serialize)]
