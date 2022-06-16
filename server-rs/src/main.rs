@@ -1,7 +1,10 @@
+use std::path::{ Path, PathBuf };
+
 #[macro_use]
 extern crate rocket;
 
 use futures::future::TryFutureExt;
+use rocket::fs::NamedFile;
 use rocket::serde::json::Json;
 use rocket_db_pools::Connection;
 use rocket_db_pools::{sqlx, Database};
@@ -156,7 +159,7 @@ async fn mark_helpful(mut db: Connection<Pool>, review_id: i32) -> db::Result<()
     Ok(())
 }
 
-#[put("/reviews/<review_id>/helpful")]
+#[put("/reviews/<review_id>/report")]
 async fn mark_reported(mut db: Connection<Pool>, review_id: i32) -> db::Result<()> {
     sqlx::query!("UPDATE reviews.reviews
                   SET reported = true
@@ -168,6 +171,11 @@ async fn mark_reported(mut db: Connection<Pool>, review_id: i32) -> db::Result<(
     Ok(())
 }
 
+#[get("/<file..>")]
+async fn file(file: PathBuf) -> Option<NamedFile> {
+    NamedFile::open(Path::new("public/").join(file)).await.ok()
+}
+
 #[launch]
 async fn rocket() -> _ {
     rocket::build()
@@ -176,4 +184,5 @@ async fn rocket() -> _ {
         .mount("/", routes![get_reviews])
         .mount("/", routes![mark_helpful])
         .mount("/", routes![mark_reported])
+        .mount("/", routes![file])
 }
