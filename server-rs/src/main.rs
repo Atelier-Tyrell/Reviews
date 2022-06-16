@@ -100,48 +100,48 @@ pub async fn get_reviews(
 }
 
 #[get("/metadata?<product_id>")]
-pub async fn get_metadata(mut db: Connection<Pool>, product_id: i32) -> db::Result<Json<Metadata>> {
-    let product = sqlx::query!("SELECT * FROM reviews.products WHERE id = $1", product_id)
+pub async fn get_metadata(mut db: Connection<Pool>, product_id: i32) -> Option<Json<Metadata>> {
+    sqlx::query!("SELECT * FROM reviews.products WHERE id = $1", product_id)
         .fetch_one(&mut *db)
-        .await?;
-
-    let data: Metadata = Metadata {
-        id: product.id,
-        num_1_stars: product.num_1_stars,
-        num_2_stars: product.num_2_stars,
-        num_3_stars: product.num_3_stars,
-        num_4_stars: product.num_4_stars,
-        num_5_stars: product.num_5_stars,
-        recommended: product.num_recommended,
-        characteristics: Characteristics {
-            Fit: Characteristic {
-                id: product.fit_id,
-                value: avg_or_none(product.fit_total, product.num_reviews),
-            },
-            Size: Characteristic {
-                id: product.size_id,
-                value: avg_or_none(product.size_total, product.num_reviews),
-            },
-            Width: Characteristic {
-                id: product.width_id,
-                value: avg_or_none(product.width_total, product.num_reviews),
-            },
-            Comfort: Characteristic {
-                id: product.comfort_id,
-                value: avg_or_none(product.comfort_total, product.num_reviews),
-            },
-            Quality: Characteristic {
-                id: product.quality_id,
-                value: avg_or_none(product.quality_total, product.num_reviews),
-            },
-            Length: Characteristic {
-                id: product.length_id,
-                value: avg_or_none(product.length_total, product.num_reviews),
-            },
-        },
-    };
-
-    Ok(Json(data))
+        .map_ok(|product|
+            Json(Metadata {
+                id: product.id,
+                num_1_stars: product.num_1_stars,
+                num_2_stars: product.num_2_stars,
+                num_3_stars: product.num_3_stars,
+                num_4_stars: product.num_4_stars,
+                num_5_stars: product.num_5_stars,
+                recommended: product.num_recommended,
+                characteristics: Characteristics {
+                    Fit: Characteristic {
+                        id: product.fit_id,
+                        value: avg_or_none(product.fit_total, product.num_reviews),
+                    },
+                    Size: Characteristic {
+                        id: product.size_id,
+                        value: avg_or_none(product.size_total, product.num_reviews),
+                    },
+                    Width: Characteristic {
+                        id: product.width_id,
+                        value: avg_or_none(product.width_total, product.num_reviews),
+                    },
+                    Comfort: Characteristic {
+                        id: product.comfort_id,
+                        value: avg_or_none(product.comfort_total, product.num_reviews),
+                    },
+                    Quality: Characteristic {
+                        id: product.quality_id,
+                        value: avg_or_none(product.quality_total, product.num_reviews),
+                    },
+                    Length: Characteristic {
+                        id: product.length_id,
+                        value: avg_or_none(product.length_total, product.num_reviews),
+                    },
+                },
+            })
+        )
+        .await
+        .ok()
 }
 
 #[launch]
