@@ -11,5 +11,5 @@ export let options = {
 
 //Below randomize the endpoints
 export default function () {
-  http.get(`http://localhost:8000/metadata?product_id=${Math.floor(Math.random() * (1000000 - 1 + 1)) + 1}`);
+  http.get(`http://localhost:8000/reviews/meta?product_id=${Math.floor(Math.random() * (1000000 - 1 + 1)) + 1}`);
 }
