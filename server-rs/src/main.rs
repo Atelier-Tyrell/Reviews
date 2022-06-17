@@ -153,8 +153,8 @@ pub async fn get_metadata(mut db: Connection<Pool>, product_id: i32) -> Option<J
 async fn mark_helpful(mut db: Connection<Pool>, review_id: i32) -> db::Result<()> {
     sqlx::query!(
         "UPDATE reviews.reviews
-                SET helpful = helpful + 1
-                WHERE id = $1",
+         SET helpful = helpful + 1
+         WHERE id = $1",
         review_id
     )
     .execute(&mut *db)
@@ -167,8 +167,8 @@ async fn mark_helpful(mut db: Connection<Pool>, review_id: i32) -> db::Result<()
 async fn mark_reported(mut db: Connection<Pool>, review_id: i32) -> db::Result<()> {
     sqlx::query!(
         "UPDATE reviews.reviews
-                  SET reported = true
-                  WHERE reviews.id = $1",
+         SET reported = true
+         WHERE reviews.id = $1",
         review_id
     )
     .execute(&mut *db)
@@ -195,8 +195,8 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
                       name,
                       email
                   )
-                  VALUES ($1, $2, $3, $4, $5, $6, $7)
-                  RETURNING id;",
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id;",
         input.product_id,
         input.rating,
         input.summary,
@@ -215,7 +215,7 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
     if input.photos.is_some() {
         sqlx::query!(
             "INSERT INTO reviews.photos (review_id, url)
-                      SELECT $1, value FROM json_array_elements($2);",
+             SELECT $1, value FROM json_array_elements($2);",
             review_id,
             input.photos
         )
@@ -226,11 +226,11 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
     // Update metadata
     let query_string = format!(
         "UPDATE reviews.producs rp
-                                SET
-                                    {} = {} + 1,
-                                    num_reviews = num_reviews + 1,
-                                    num_recommended = num_recommended + {},
-                                WHERE rp.id = {};",
+         SET
+             {} = {} + 1,
+             num_reviews = num_reviews + 1,
+             num_recommended = num_recommended + {},
+         WHERE rp.id = {};",
         star_col, star_col, recommended_inc, input.product_id
     );
 
