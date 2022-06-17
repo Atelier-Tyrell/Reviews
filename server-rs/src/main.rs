@@ -1,4 +1,4 @@
-use std::path::{ Path, PathBuf };
+use std::path::{Path, PathBuf};
 
 #[macro_use]
 extern crate rocket;
@@ -11,12 +11,12 @@ use rocket_db_pools::{sqlx, Database};
 
 mod db;
 mod metadata;
-mod review;
 mod new_review;
+mod review;
 
 use metadata::{avg_or_none, Characteristic, Characteristics, Metadata};
-use review::{Review, Reviews, CharacteristicIdentifier};
-use new_review::{NewReview};
+use new_review::NewReview;
+use review::{CharacteristicIdentifier, Review, Reviews};
 
 /// DATABASE
 #[derive(Database)]
@@ -108,7 +108,7 @@ pub async fn get_reviews(
 pub async fn get_metadata(mut db: Connection<Pool>, product_id: i32) -> Option<Json<Metadata>> {
     sqlx::query!("SELECT * FROM reviews.products WHERE id = $1", product_id)
         .fetch_one(&mut *db)
-        .map_ok(|product|
+        .map_ok(|product| {
             Json(Metadata {
                 id: product.id,
                 num_1_stars: product.num_1_stars,
@@ -144,31 +144,35 @@ pub async fn get_metadata(mut db: Connection<Pool>, product_id: i32) -> Option<J
                     },
                 },
             })
-        )
+        })
         .await
         .ok()
 }
 
 #[put("/reviews/<review_id>/helpful")]
 async fn mark_helpful(mut db: Connection<Pool>, review_id: i32) -> db::Result<()> {
-    sqlx::query!("UPDATE reviews.reviews
+    sqlx::query!(
+        "UPDATE reviews.reviews
                 SET helpful = helpful + 1
                 WHERE id = $1",
-                review_id)
-        .execute(&mut *db)
-        .await?;
+        review_id
+    )
+    .execute(&mut *db)
+    .await?;
 
     Ok(())
 }
 
 #[put("/reviews/<review_id>/report")]
 async fn mark_reported(mut db: Connection<Pool>, review_id: i32) -> db::Result<()> {
-    sqlx::query!("UPDATE reviews.reviews
+    sqlx::query!(
+        "UPDATE reviews.reviews
                   SET reported = true
                   WHERE reviews.id = $1",
-                review_id)
-        .execute(&mut *db)
-        .await?;
+        review_id
+    )
+    .execute(&mut *db)
+    .await?;
 
     Ok(())
 }
@@ -178,9 +182,10 @@ async fn file(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("public/").join(file)).await.ok()
 }
 
-#[post("/reviews", format= "application/json", data = "<input>")]
+#[post("/reviews", format = "application/json", data = "<input>")]
 async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Result<()> {
-    let review_id = sqlx::query!("INSERT INTO reviews.reviews
+    let review_id = sqlx::query!(
+        "INSERT INTO reviews.reviews
                   (
                       product_id,
                       rating,
@@ -192,51 +197,61 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
                   )
                   VALUES ($1, $2, $3, $4, $5, $6, $7)
                   RETURNING id;",
-                  input.product_id,
-                  input.rating,
-                  input.summary,
-                  input.body,
-                  input.recommended,
-                  input.name,
-                  input.email)
-        .fetch_one(&mut *db)
-        .map_ok(|row| row.id)
-        .await?;
+        input.product_id,
+        input.rating,
+        input.summary,
+        input.body,
+        input.recommended,
+        input.name,
+        input.email
+    )
+    .fetch_one(&mut *db)
+    .map_ok(|row| row.id)
+    .await?;
 
     let star_col = format!("num_{}_stars", input.rating);
     let recommended_inc = if input.recommended { 1 } else { 0 };
 
     if input.photos.is_some() {
-        sqlx::query!("INSERT INTO reviews.photos (review_id, url)
+        sqlx::query!(
+            "INSERT INTO reviews.photos (review_id, url)
                       SELECT $1, value FROM json_array_elements($2);",
-                      review_id, input.photos)
-            .execute(&mut *db)
-            .await?;
+            review_id,
+            input.photos
+        )
+        .execute(&mut *db)
+        .await?;
     }
 
     // Update metadata
-    let query_string = format!("UPDATE reviews.producs rp
+    let query_string = format!(
+        "UPDATE reviews.producs rp
                                 SET
                                     {} = {} + 1,
                                     num_reviews = num_reviews + 1,
                                     num_recommended = num_recommended + {},
                                 WHERE rp.id = {};",
-                                star_col, star_col, recommended_inc, input.product_id);
+        star_col, star_col, recommended_inc, input.product_id
+    );
 
-    sqlx::query(&query_string)
-        .execute(&mut *db)
-        .await?;
+    sqlx::query(&query_string).execute(&mut *db).await?;
 
     let characteristicNames = sqlx::query!(
         "SELECT name, id
          FROM reviews.characteristics rc
          WHERE rc.product_id = $1;",
-         input.product_id)
-        .fetch_all(&mut *db)
-        .map_ok(|row| row.into_iter().map(|r| {
-           return CharacteristicIdentifier { name: r.name, id: r.id }
-        }))
-        .await?;
+        input.product_id
+    )
+    .fetch_all(&mut *db)
+    .map_ok(|row| {
+        row.into_iter().map(|r| {
+            return CharacteristicIdentifier {
+                name: r.name,
+                id: r.id,
+            };
+        })
+    })
+    .await?;
 
     let query_init = "UPDATE reviews.products \nSET\n".to_string();
     let mut query_string: String = characteristicNames.fold(query_init, |mut memo, name| {
@@ -244,36 +259,32 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
         let char_id = name.id;
         let chars = match &input.characteristics {
             Some(x) => x,
-            None => return memo
+            None => return memo,
         };
 
         let char_rating = match chars.get(char_id.to_string()) {
             Some(id) => id,
-            None => return memo
+            None => return memo,
         };
 
         let fit_col_name = format!("{}_id", char_id);
         let value_col_name = format!("{}_name", char_name);
         memo = memo.to_string() + &format!("    {} = {},\n", fit_col_name, char_id);
-        memo = memo.to_string() + &format!(
-            "    {} = {} + {},\n",
-            value_col_name,
-            value_col_name,
-            char_rating
+        memo = memo.to_string()
+            + &format!(
+                "    {} = {} + {},\n",
+                value_col_name, value_col_name, char_rating
             );
 
-        return memo
+        return memo;
     });
 
     query_string = query_string.trim_end_matches(", ").to_string() + "\n";
     query_string += &format!("WHERE reviews.products.id = {};", input.product_id);
-    sqlx::query(&query_string)
-        .execute(&mut *db)
-        .await?;
+    sqlx::query(&query_string).execute(&mut *db).await?;
 
     Ok(())
 }
-
 
 #[launch]
 async fn rocket() -> _ {

@@ -11,5 +11,5 @@ pub struct NewReview {
     pub name: String,
     pub email: String,
     pub photos: Option<serde_json::Value>,
-    pub characteristics: Option<serde_json::Value>
+    pub characteristics: Option<serde_json::Value>,
 }
