@@ -1,10 +1,7 @@
-use std::path::{Path, PathBuf};
-
 #[macro_use]
 extern crate rocket;
 
 use futures::future::TryFutureExt;
-use rocket::fs::NamedFile;
 use rocket::serde::json::Json;
 use rocket_db_pools::Connection;
 use rocket_db_pools::{sqlx, Database};
@@ -177,11 +174,6 @@ async fn mark_reported(mut db: Connection<Pool>, review_id: i32) -> db::Result<(
     Ok(())
 }
 
-#[get("/<file..>")]
-async fn file(file: PathBuf) -> Option<NamedFile> {
-    NamedFile::open(Path::new("public/").join(file)).await.ok()
-}
-
 #[post("/reviews", format = "application/json", data = "<input>")]
 async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Result<()> {
     let review_id = sqlx::query!(
@@ -287,13 +279,29 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
 }
 
 #[launch]
-async fn rocket() -> _ {
+fn rocket() -> _ {
     rocket::build()
         .attach(Pool::init())
         .mount("/", routes![get_metadata])
         .mount("/", routes![get_reviews])
         .mount("/", routes![mark_helpful])
         .mount("/", routes![mark_reported])
-        .mount("/", routes![file])
         .mount("/", routes![add_review])
+}
+
+#[cfg(test)]
+mod test {
+    use rocket::local::blocking::Client;
+    use rocket::http::{ContentType, Status};
+
+    #[test]
+    fn test_invalid_route_no_match() {
+        let client = Client::tracked(super::rocket()).expect("valied `Rocket`");
+
+        let response = client.get("/").dispatch();
+        assert_eq!(response.status(), Status::NotFound);
+
+        let response = client.get("/reviews/meta?product_id=8000").dispatch();
+        assert_eq!(response.status(), Status::Ok);
+    }
 }
