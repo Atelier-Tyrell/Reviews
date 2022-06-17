@@ -30,3 +30,10 @@ pub struct Photo {
     pub id: i32,
     pub url: String,
 }
+
+#[derive(Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct CharacteristicIdentifier {
+    pub name: String,
+    pub id: i32,
+}

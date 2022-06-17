@@ -15,7 +15,7 @@ mod review;
 mod new_review;
 
 use metadata::{avg_or_none, Characteristic, Characteristics, Metadata};
-use review::{Review, Reviews};
+use review::{Review, Reviews, CharacteristicIdentifier};
 use new_review::{NewReview};
 
 /// DATABASE
@@ -223,9 +223,55 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
                                 WHERE rp.id = {};",
                                 star_col, star_col, recommended_inc, input.product_id);
 
+    sqlx::query(&query_string)
+        .execute(&mut *db)
+        .await?;
+
+    let characteristicNames = sqlx::query!(
+        "SELECT name, id
+         FROM reviews.characteristics rc
+         WHERE rc.product_id = $1;",
+         input.product_id)
+        .fetch_all(&mut *db)
+        .map_ok(|row| row.into_iter().map(|r| {
+           return CharacteristicIdentifier { name: r.name, id: r.id }
+        }))
+        .await?;
+
+    let query_init = "UPDATE reviews.products \nSET\n".to_string();
+    let mut query_string: String = characteristicNames.fold(query_init, |mut memo, name| {
+        let char_name = name.name;
+        let char_id = name.id;
+        let chars = match &input.characteristics {
+            Some(x) => x,
+            None => return memo
+        };
+
+        let char_rating = match chars.get(char_id.to_string()) {
+            Some(id) => id,
+            None => return memo
+        };
+
+        let fit_col_name = format!("{}_id", char_id);
+        let value_col_name = format!("{}_name", char_name);
+        memo = memo.to_string() + &format!("    {} = {},\n", fit_col_name, char_id);
+        memo = memo.to_string() + &format!(
+            "    {} = {} + {},\n",
+            value_col_name,
+            value_col_name,
+            char_rating
+            );
+
+        return memo
+    });
+
+    query_string = query_string.trim_end_matches(", ").to_string() + "\n";
+    query_string += &format!("WHERE reviews.products.id = {};", input.product_id);
+    sqlx::query(&query_string)
+        .execute(&mut *db)
+        .await?;
 
     Ok(())
-
 }
 
 
@@ -238,4 +284,5 @@ async fn rocket() -> _ {
         .mount("/", routes![mark_helpful])
         .mount("/", routes![mark_reported])
         .mount("/", routes![file])
+        .mount("/", routes![add_review])
 }
