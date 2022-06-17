@@ -236,7 +236,7 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
 
     sqlx::query(&query_string).execute(&mut *db).await?;
 
-    let characteristicNames = sqlx::query!(
+    let characteristic_names = sqlx::query!(
         "SELECT name, id
          FROM reviews.characteristics rc
          WHERE rc.product_id = $1;",
@@ -254,7 +254,7 @@ async fn add_review(mut db: Connection<Pool>, input: Json<NewReview>) -> db::Res
     .await?;
 
     let query_init = "UPDATE reviews.products \nSET\n".to_string();
-    let mut query_string: String = characteristicNames.fold(query_init, |mut memo, name| {
+    let mut query_string: String = characteristic_names.fold(query_init, |mut memo, name| {
         let char_name = name.name;
         let char_id = name.id;
         let chars = match &input.characteristics {

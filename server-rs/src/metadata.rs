@@ -25,6 +25,7 @@ pub struct Characteristic {
 
 #[derive(Deserialize, Serialize)]
 #[serde(crate = "rocket::serde")]
+#[allow(non_snake_case)]
 pub struct Characteristics {
     pub Fit: Characteristic,
     pub Size: Characteristic,
